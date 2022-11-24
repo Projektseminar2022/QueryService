@@ -1,23 +1,15 @@
 package de.hbrs.model;
 
-import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Table;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Table("temperature")
-@Data
-public class Temperature {
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
-    @Id
-    private UUID id;
-
-    private float temperature;
-
-    private String location;
-
-    private LocalDateTime time;
-
-}
+@Table("temperatures")
+public record Temperature(
+    @Id UUID id,
+    float temperature, // TODO: why float? Does the API only provide float precision? If not -> double
+    String location,
+    LocalDateTime time
+) { }

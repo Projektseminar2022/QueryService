@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: QueryService
+  profiles:
+    active:
+    - default  
+  r2dbc:
+    username: seminar
+    password: seminar!
+    url: r2dbc:postgresql://localhost:5432/seminardb
+
+server:
+  port: 8080
+    
+logging:
+  level:
+    '[de.hbrs]': debug
