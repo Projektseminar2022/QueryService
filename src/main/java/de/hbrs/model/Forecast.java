@@ -1,5 +1,8 @@
 package de.hbrs.model;
 
+import lombok.Data;
+
+@Data
 public class Forecast {
     int dt;
     double temp;
@@ -16,7 +19,8 @@ public class Forecast {
     Weather[] weather;
     double pop;
 
-    class Weather {
+    @SuppressWarnings("unused")
+    static class Weather {
         int id;
         String main;
         String description;

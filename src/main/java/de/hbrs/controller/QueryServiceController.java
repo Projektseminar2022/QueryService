@@ -1,18 +1,20 @@
 package de.hbrs.controller;
 
+import de.hbrs.model.*;
 import org.springframework.http.MediaType;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import de.hbrs.model.Forecast;
-import de.hbrs.model.ForecastList;
-import de.hbrs.model.User;
 import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -22,79 +24,171 @@ public class QueryServiceController {
     // -------------------------------------------------------------------------
     // STATIC FIELDS
 
-    // private static final
-    // DateTimeFormatter DATE_TIME_FORMAT =
-    //     DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm");
+    private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm");
 
-    private static final String dataAquisitionAPI = "localhost:8080/data-aquisition";
+    private static final String dataAcquisitionAPI = "localhost:8080/data-acquisition";
     private static final String locationEndpoint  = "/location";
     private static final String weatherEndpoint   = "/weather";
 
     // -------------------------------------------------------------------------
-    private ForecastList callAPI1(double longitude, double latitude) {
-        String url = dataAquisitionAPI + weatherEndpoint + "?longitude=" + longitude + ",latitude=" + latitude;
-
+    // MAIN DATA GATES
+    @SuppressWarnings("ConstantConditions")
+    private List<Forecast> queryWeatherEndpoint(double longitude, double latitude) {
+        String url = dataAcquisitionAPI + weatherEndpoint + "?longitude=" + longitude + ",latitude=" + latitude;
         RestTemplate restTemplate = new RestTemplate();
-        ForecastList list = restTemplate.getForObject(url, ForecastList.class);
+        return List.of(restTemplate.getForObject(url, ForecastList.class).getForecasts());
+    }
 
-        return list;
+    @SuppressWarnings("ConstantConditions")
+    private List<Location> queryLocationEndpoint() {
+        String url = dataAcquisitionAPI + locationEndpoint + "/all";
+        RestTemplate restTemplate = new RestTemplate();
+        return List.of(restTemplate.getForObject(url, LocationList.class).getLocations());
     }
 
     // -------------------------------------------------------------------------
+    // PARSER METHODS
+    // FORECAST
+    private List<Forecast> getForecasts(double longitude, double latitude) {
+        return queryWeatherEndpoint(longitude, latitude);
+    }
+
+    // Filter the forecasts for location and time
+    private Forecast getForecast(double longitude, double latitude, String time) {
+        LocalDateTime localDateTime = LocalDateTime.parse(time, DATE_TIME_FORMAT);
+        return this.getForecasts(longitude, latitude).get(localDateTime.getHour());
+    }
+
+    private List<Double> getTemperatures(double longitude, double latitude) {
+        return this.getForecasts(longitude, latitude).stream().map(Forecast::getTemp).collect(Collectors.toList());
+    }
+
+    private Double getTemperature(double longitude, double latitude, String time) {
+        LocalDateTime localDateTime = LocalDateTime.parse(time, DATE_TIME_FORMAT);
+        return this.getTemperatures(longitude, latitude).get(localDateTime.getHour());
+    }
+
+    // -------------------------------------------------------------------------
+    // LOCATION
+    private Coordinate translateLocationCodeToCoordinates(String locationCode) {
+        List<Location> locations = this.queryLocationEndpoint();
+
+        for(Location location : locations) {
+            for(String locationAttribute : location.getComparableAttributes()) {
+                if(locationAttribute.contains(locationCode)) {
+                    return new Coordinate(location.getLongitude(), location.getLatitude());
+                }
+            }
+        }
+
+        return null;
+    }
+
+
+    // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // GET MAPPINGS
 
-    // Find by stating a location and a timestamp ...and-time/?/location
+    // COORDINATES
+
+    // FORECASTS
+
+    // Find forecasts by stating a location
     @GetMapping(
-        path = "/find-forcast-by-coordinates",
+        path = "/find-forecasts-by-coordinates",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<String> findForecastByCoordinates(@RequestParam double longitude, @RequestParam double latitude) {
-        return Mono.just(this.callAPI1(longitude, latitude));
+    public Mono<List<Forecast>> findForecastsByCoordinates(@RequestParam double longitude, @RequestParam double latitude) {
+        return Mono.just(this.getForecasts(longitude, latitude));
     }
 
-    // Find by stating a location and a timestamp ...and-time/?/location
+    // Find forecast by stating location and time
     @GetMapping(
-        path = "/find-temperature-by-coordinates",
-        produces = MediaType.APPLICATION_JSON_VALUE
+            path = "/find-forecast-by-coordinates-and-time",
+            produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<String> findTemperatureByCoordinates(@RequestParam double longitude, @RequestParam double latitude) {
-
-        this.callAPI1(longitude, latitude);
-
-        return str;
+    public Mono<Forecast> findForecastByCoordinatesAndTime(@RequestParam double longitude, @RequestParam double latitude, @RequestParam String time) {
+        return Mono.just(this.getForecast(longitude, latitude, time));
     }
 
-    // Find by location and the current time
+    // -------------------------------------------------------------------------
+    // TEMPERATURES
+
+    // Find temperatures by stating a location
     @GetMapping(
-        path = "/find-by-location-at-current-time",
-        consumes = MediaType.APPLICATION_JSON_VALUE,
-        produces = MediaType.APPLICATION_JSON_VALUE
+            path = "/find-temperatures-by-coordinates",
+            produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<Double> findByLocationAtCurrentTime(@RequestParam double longitude, @RequestParam double latitude) {
-
-        return Mono.just(null);
+    public Mono<List<Double>> findTemperaturesByCoordinates(@RequestParam double longitude, @RequestParam double latitude) {
+        return Mono.just(this.getTemperatures(longitude, latitude));
     }
 
-    // Find by stating a User that allows location and time retrieval
+    // Find temperature by stating location and time
     @GetMapping(
-        path = "/find-by-user",
-        consumes = MediaType.APPLICATION_JSON_VALUE,
-        produces = MediaType.APPLICATION_JSON_VALUE
+            path = "/find-temperature-by-coordinate-and-time",
+            produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<Double> findByUser(@RequestBody User user) {
+    public Mono<Double> findTemperatureByCoordinatesAndTime(@RequestParam double longitude, @RequestParam double latitude, @RequestParam String time) {
+        return Mono.just(this.getTemperature(longitude, latitude, time));
+    }
 
-        return Mono.just(null);
+    // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Location
+
+    // FORECASTS
+
+    @GetMapping(
+            path = "/find-forecasts-by-location",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<List<Forecast>> findForecastsByLocation(@RequestParam String locationCode) {
+        Coordinate coordinate = this.translateLocationCodeToCoordinates(locationCode);
+
+        // LocationCode did not match for any location
+        if(coordinate == null) { return Mono.empty();}
+
+        return Mono.just(this.getForecasts(coordinate.longitude(), coordinate.latitude()));
     }
 
     @GetMapping(
-        path = "/find-by-city"
+            path = "/find-forecast-by-location-and-time",
+            produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<Double> findByCity(@RequestParam String city) {
+    public Mono<Forecast> findForecastByLocationAndTime(@RequestParam String locationCode, @RequestParam String time) {
+        Coordinate coordinate = this.translateLocationCodeToCoordinates(locationCode);
 
-        
-        return Mono.just(null);
+        // LocationCode did not match for any location
+        if(coordinate == null) {return Mono.empty();}
+
+        return Mono.just(this.getForecast(coordinate.longitude(), coordinate.latitude(), time));
     }
 
+    @GetMapping(
+            path = "/find-temperatures-by-location",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<List<Double>> findTemperaturesByLocation(@RequestParam String locationCode) {
+        Coordinate coordinate = this.translateLocationCodeToCoordinates(locationCode);
+
+        // LocationCode did not match for any location
+        if(coordinate == null) { return Mono.empty();}
+
+        return Mono.just(this.getTemperatures(coordinate.longitude(), coordinate.latitude()));
+    }
+
+    @GetMapping(
+            path = "/find-temperature-by-location-and-time",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public Mono<Double> findTemperatureByLocationAndTime(@RequestParam String locationCode, @RequestParam String time) {
+        Coordinate coordinate = this.translateLocationCodeToCoordinates(locationCode);
+
+        // LocationCode did not match for any location
+        if(coordinate == null) { return Mono.empty();}
+
+        return Mono.just(this.getTemperature(coordinate.longitude(), coordinate.latitude(), time));
+    }
 
     // -------------------------------------------------------------------------
 
