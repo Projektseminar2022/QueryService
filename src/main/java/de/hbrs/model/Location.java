@@ -17,6 +17,6 @@ public class Location {
     private String language;
 
     public List<String> getComparableAttributes() {
-        return List.of(this.display_name, this.country_code, this.city, this.state, this.country, this.country_code);
+        return List.of(this.display_name, this.city_district, this.city, this.state, this.country, this.country_code);
     }
 }
