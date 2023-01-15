@@ -3,11 +3,11 @@ spring:
     name: QueryService
   profiles:
     active:
-    - default  
+    - default
 
 server:
   port: 8080
-    
+
 logging:
   level:
     '[de.hbrs]': debug
