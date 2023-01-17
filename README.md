@@ -1,16 +1,16 @@
 # QUERY SERVICE
 ## Description of Requests
 
-| Request Type | link                                           |         Request Parameter | Request Body |      Returns |
-|:------------:|------------------------------------------------|--------------------------:|-------------:|-------------:|
-|      Get     | /query/find-forecasts-by-coordinates           |       Latitude, Longitude |            - |    Forecasts |
-|      Get     | /query/find-forecast-by-coordinates-and-time   | Latitude, Longitude, Time |            - |     Forecast |
-|      Get     | /query/find-temperatures-by-coordinates        |       Latitude, Longitude |            - | Temperatures |
-|      Get     | /query/find-temperature-by-coordinate-and-time | Latitude, Longitude, Time |            - |  Temperature |
-|      Get     | /query/find-forecasts-by-location              |              LocationCode |            - |    Forecasts |
-|      Get     | /query/find-forecast-by-location-and-time      |        LocationCode, Time |            - |     Forecast |
-|      Get     | /query/find-temperatures-by-location           |              LocationCode |            - | Temperatures |
-|      Get     | /query/find-temperature-by-location-and-time   |        LocationCode, Time |            - |  Temperature |
+| Request Type | link                                        |         Request Parameter | Request Body |      Returns |
+|:------------:|---------------------------------------------|--------------------------:|-------------:|-------------:|
+|      Get     | /query/forecasts-by-coordinate              |       Latitude, Longitude |            - |    Forecasts |
+|      Get     | /query/forecast-by-coordinate-and-time      | Latitude, Longitude, Time |            - |     Forecast |
+|      Get     | /query/temperatures-by-coordinate           |       Latitude, Longitude |            - | Temperatures |
+|      Get     | /query/temperature-by-coordinate-and-time   | Latitude, Longitude, Time |            - |  Temperature |
+|      Get     | /query/forecasts-by-locationCode            |              LocationCode |            - |    Forecasts |
+|      Get     | /query/forecast-by-locationCode-and-time    |        LocationCode, Time |            - |     Forecast |
+|      Get     | /query/temperatures-by-locationCode         |              LocationCode |            - | Temperatures |
+|      Get     | /query/temperature-by-locationCode-and-time |        LocationCode, Time |            - |  Temperature |
 
 ## Description of Parameters
 
