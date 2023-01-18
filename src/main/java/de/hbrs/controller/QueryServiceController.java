@@ -1,8 +1,8 @@
 package de.hbrs.controller;
 
-import de.hbrs.DataAcquisitionService;
 import de.hbrs.model.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import de.hbrs.service.DataAcquisitionService;
+
 import org.springframework.http.MediaType;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @RestController
@@ -23,7 +24,6 @@ public class QueryServiceController {
     private final DataAcquisitionService dataAcquisitionService;
 
     // Constructor
-    @Autowired
     public QueryServiceController(DataAcquisitionService dataAcquisitionService) {
         this.dataAcquisitionService = dataAcquisitionService;
     }
@@ -36,49 +36,48 @@ public class QueryServiceController {
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Mono<List<Forecast>> forecastsByCoordinate(@RequestParam double longitude, @RequestParam double latitude) {
-        return Mono.just(dataAcquisitionService.getForecasts(longitude, latitude));
+        return Mono.just(dataAcquisitionService.getForecasts(new Coordinate(longitude, latitude)));
     }
 
     // Get forecast by stating coordinate and time offset
     @GetMapping(
-            path = "/forecast-by-coordinate-and-timeOffset",
-            produces = MediaType.APPLICATION_JSON_VALUE
+        path = "/forecast-by-coordinate-and-timeOffset",
+        produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Mono<Forecast> forecastByCoordinateAndTimeOffset(@RequestParam double longitude, @RequestParam double latitude, @RequestParam int timeOffset) {
-        return Mono.just(dataAcquisitionService.getForecast(longitude, latitude, timeOffset));
+        return Mono.just(dataAcquisitionService.getForecast(new Coordinate(longitude, latitude), timeOffset));
     }
 
     // Get temperatures by stating coordinate
     @GetMapping(
-            path = "/temperatures-by-coordinate",
-            produces = MediaType.APPLICATION_JSON_VALUE
+        path = "/temperatures-by-coordinate",
+        produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<List<Double>> temperaturesByCoordinate(@RequestParam double longitude, @RequestParam double latitude) {
-        return Mono.just(dataAcquisitionService.getTemperatures(longitude, latitude));
+    public Mono<List<Temperature>> temperaturesByCoordinate(@RequestParam double longitude, @RequestParam double latitude) {
+        return Mono.just(dataAcquisitionService.getTemperatures(new Coordinate(longitude, latitude)));
     }
 
     // Get temperature by coordinate and time offset
     @GetMapping(
-            path = "/temperature-by-coordinate-and-timeOffset",
-            produces = MediaType.APPLICATION_JSON_VALUE
+        path = "/temperature-by-coordinate-and-timeOffset",
+        produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<Double> temperatureByCoordinateAndTimeOffset(@RequestParam double longitude, @RequestParam double latitude, @RequestParam int timeOffset) {
-        return Mono.just(dataAcquisitionService.getTemperature(longitude, latitude, timeOffset));
+    public Mono<Temperature> temperatureByCoordinateAndTimeOffset(@RequestParam double longitude, @RequestParam double latitude, @RequestParam int timeOffset) {
+        return Mono.just(dataAcquisitionService.getTemperature(new Coordinate(longitude, latitude), timeOffset));
     }
 
     // LocationCode
     // Get forecasts by locationCode
     @GetMapping(
-            path = "/forecasts-by-locationCode",
-            produces = MediaType.APPLICATION_JSON_VALUE
+        path = "/forecasts-by-locationCode",
+        produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Mono<List<Forecast>> forecastsByLocationCode(@RequestParam String locationCode) {
-        Coordinate coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
+        Optional<Coordinate> coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
 
-        // LocationCode did not match any location
-        if(coordinate == null) { return Mono.empty();}
+        List<Forecast> forecasts = coordinate.map(dataAcquisitionService::getForecasts).orElseGet(List::of);
 
-        return Mono.just(dataAcquisitionService.getForecasts(coordinate.longitude(), coordinate.latitude()));
+        return Mono.just(forecasts);
     }
 
     // Get forecast by locationCode and time offset
@@ -87,12 +86,11 @@ public class QueryServiceController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Mono<Forecast> forecastByLocationCodeAndTimeOffset(@RequestParam String locationCode, @RequestParam int timeOffset) {
-        Coordinate coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
+        Optional<Coordinate> coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
 
-        // LocationCode did not match any location
-        if(coordinate == null) {return Mono.empty();}
+        Optional<Forecast> forecast = coordinate.map(coor -> dataAcquisitionService.getForecast(coor, timeOffset));
 
-        return Mono.just(dataAcquisitionService.getForecast(coordinate.longitude(), coordinate.latitude(), timeOffset));
+        return Mono.justOrEmpty(forecast);
     }
 
     // Get temperature by locationCode
@@ -100,13 +98,12 @@ public class QueryServiceController {
             path = "/temperatures-by-locationCode",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<List<Double>> temperaturesByLocationCode(@RequestParam String locationCode) {
-        Coordinate coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
+    public Mono<List<Temperature>> temperaturesByLocationCode(@RequestParam String locationCode) {
+        Optional<Coordinate> coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
 
-        // LocationCode did not match any location
-        if(coordinate == null) { return Mono.empty();}
+        List<Temperature> temperatures = coordinate.map(dataAcquisitionService::getTemperatures).orElseGet(List::of);
 
-        return Mono.just(dataAcquisitionService.getTemperatures(coordinate.longitude(), coordinate.latitude()));
+        return Mono.just(temperatures);
     }
 
     // Get temperature by locationCode and time offset
@@ -114,13 +111,12 @@ public class QueryServiceController {
             path = "/temperature-by-locationCode-and-timeOffset",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<Double> temperatureByLocationCodeAndTimeOffset(@RequestParam String locationCode, @RequestParam int timeOffset) {
-        Coordinate coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
+    public Mono<Temperature> temperatureByLocationCodeAndTimeOffset(@RequestParam String locationCode, @RequestParam int timeOffset) {
+        Optional <Coordinate> coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
 
-        // LocationCode did not match any location
-        if(coordinate == null) { return Mono.empty();}
+        Optional<Temperature> temperature = coordinate.map(coord -> dataAcquisitionService.getTemperature(coord, timeOffset));
 
-        return Mono.just(dataAcquisitionService.getTemperature(coordinate.longitude(), coordinate.latitude(), timeOffset));
+        return Mono.justOrEmpty(temperature);
     }
 
 }

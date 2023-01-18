@@ -6,8 +6,8 @@ import java.util.List;
 
 @Data
 public class Location {
-    private double latitude;
     private double longitude;
+    private double latitude;
     private String display_name;
     private String city_district;
     private String city;
