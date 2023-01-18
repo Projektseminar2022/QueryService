@@ -32,7 +32,7 @@ public class QueryServiceController {
     // Coordinate
     // Get forecasts by stating coordinates
     @GetMapping(
-        path = "/forecasts-by-coordinates",
+        path = "/forecasts-by-coordinate",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Mono<List<Forecast>> forecastsByCoordinate(@RequestParam double longitude, @RequestParam double latitude) {
@@ -41,7 +41,7 @@ public class QueryServiceController {
 
     // Get forecast by stating coordinates and time offset
     @GetMapping(
-        path = "/forecast-by-coordinates-and-timeOffset",
+        path = "/forecast-by-coordinate-and-timeOffset",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Mono<Forecast> forecastByCoordinateAndTimeOffset(@RequestParam double longitude, @RequestParam double latitude, @RequestParam int timeOffset) {
@@ -50,7 +50,7 @@ public class QueryServiceController {
 
     // Get temperatures by stating coordinates
     @GetMapping(
-        path = "/temperatures-by-coordinates",
+        path = "/temperatures-by-coordinate",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Mono<List<Temperature>> temperaturesByCoordinate(@RequestParam double longitude, @RequestParam double latitude) {
@@ -59,7 +59,7 @@ public class QueryServiceController {
 
     // Get temperature by coordinates and time offset
     @GetMapping(
-        path = "/temperature-by-coordinates-and-timeOffset",
+        path = "/temperature-by-coordinate-and-timeOffset",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Mono<Temperature> temperatureByCoordinateAndTimeOffset(@RequestParam double longitude, @RequestParam double latitude, @RequestParam int timeOffset) {
