@@ -3,10 +3,10 @@
 
 | Request Type | link                                              |                Request Parameter | Request Body |      Returns |
 |:------------:|---------------------------------------------------|---------------------------------:|-------------:|-------------:|
-|      Get     | /query/forecasts-by-coordinate                    |              Latitude, Longitude |            - |    Forecasts |
-|      Get     | /query/forecast-by-coordinate-and-timeOffset      | Latitude, Longitude, Time Offset |            - |     Forecast |
-|      Get     | /query/temperatures-by-coordinate                 |              Latitude, Longitude |            - | Temperatures |
-|      Get     | /query/temperature-by-coordinate-and-timeOffset   | Latitude, Longitude, Time Offset |            - |  Temperature |
+|      Get     | /query/forecasts-by-coordinates                    |              Latitude, Longitude |            - |    Forecasts |
+|      Get     | /query/forecast-by-coordinates-and-timeOffset      | Latitude, Longitude, Time Offset |            - |     Forecast |
+|      Get     | /query/temperatures-by-coordinates                 |              Latitude, Longitude |            - | Temperatures |
+|      Get     | /query/temperature-by-coordinates-and-timeOffset   | Latitude, Longitude, Time Offset |            - |  Temperature |
 |      Get     | /query/forecasts-by-locationCode                  |                     LocationCode |            - |    Forecasts |
 |      Get     | /query/forecast-by-locationCode-and-timeOffset    |        LocationCode, Time Offset |            - |     Forecast |
 |      Get     | /query/temperatures-by-locationCode               |                     LocationCode |            - | Temperatures |
