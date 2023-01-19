@@ -30,7 +30,8 @@ public class DataAcquisitionService {
         Forecast[] forecasts = webClient.get()
             .uri(
                 uriBuilder -> uriBuilder
-                    .pathSegment(DATA_ACQUISITION_API, WEATHER_ENDPOINT)
+                    .path(DATA_ACQUISITION_API)
+                    .pathSegment(WEATHER_ENDPOINT)
                     .queryParam("longitude", longitude)
                     .queryParam("latitude", latitude)
                     .build()
@@ -50,7 +51,8 @@ public class DataAcquisitionService {
         Location[] locations = webClient.get()
             .uri(
                 uriBuilder -> uriBuilder
-                    .pathSegment(DATA_ACQUISITION_API, LOCATION_ENDPOINT, "all")
+                    .path(DATA_ACQUISITION_API)
+                    .pathSegment(LOCATION_ENDPOINT, "all")
                     .build()
             )
             .retrieve()
