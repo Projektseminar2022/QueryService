@@ -6,7 +6,7 @@ import de.hbrs.model.Location;
 import de.hbrs.model.Temperature;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,37 +18,46 @@ public class DataAcquisitionService {
     // Statics
     // example with ngrok: 'https://fde1-2a02-908-620-85c0-500-89fb-61c3-8e31.eu.ngrok.io' -> http://localhost:8080
     private static final String DATA_ACQUISITION_API = "http://localhost:5098";
-    private static final String LOCATION_ENDPOINT    = "/Locations";
-    private static final String WEATHER_ENDPOINT     = "/WeatherForecast";
+    private static final String LOCATION_ENDPOINT    = "Locations";
+    private static final String WEATHER_ENDPOINT     = "WeatherForecast";
 
     // Endpoint Gates
     // WeatherForecast endpoint gate
     private List<Forecast> queryWeatherEndpoint(double longitude, double latitude) {
-        String url =
-              DATA_ACQUISITION_API
-            + WEATHER_ENDPOINT
-            + "?longitude=" + longitude
-            + "&latitude=" + latitude;
 
-        RestTemplate restTemplate = new RestTemplate();
+        WebClient webClient = WebClient.create();
 
-        Forecast[] forcasts = restTemplate.getForObject(url, Forecast[].class);
+        Forecast[] forecasts = webClient.get()
+            .uri(
+                uriBuilder -> uriBuilder
+                    .pathSegment(DATA_ACQUISITION_API, WEATHER_ENDPOINT)
+                    .queryParam("longitude", longitude)
+                    .queryParam("latitude", latitude)
+                    .build()
+            )
+            .retrieve()
+            .bodyToMono(Forecast[].class)
+            .block();
 
-        return List.of(forcasts);
+        return List.of(forecasts);
     }
 
     // Location endpoint gate
     private List<Location> queryLocationEndpoint() {
-        String url =
-              DATA_ACQUISITION_API
-            + LOCATION_ENDPOINT
-            + "/all";
 
-        RestTemplate restTemplate = new RestTemplate();
+        WebClient webClient = WebClient.create();
 
-        Location[] forcasts = restTemplate.getForObject(url, Location[].class);
+        Location[] locations = webClient.get()
+            .uri(
+                uriBuilder -> uriBuilder
+                    .pathSegment(DATA_ACQUISITION_API, LOCATION_ENDPOINT, "all")
+                    .build()
+            )
+            .retrieve()
+            .bodyToMono(Location[].class)
+            .block();
 
-        return List.of(forcasts);
+        return List.of(locations);
     }
 
     // Get unfiltered forecasts by coordinate
