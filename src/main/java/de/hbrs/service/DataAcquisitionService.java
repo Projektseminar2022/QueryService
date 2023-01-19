@@ -91,7 +91,7 @@ public class DataAcquisitionService {
     public Mono<Coordinate> translateLocationCodeToCoordinates(String locationCode) {
         Mono<List<Location>> locations = this.queryLocationEndpoint();
 
-        var location = locations.map(
+        Mono<Coordinate> location = locations.map(
             list -> list.stream()
                 .filter(
                     loc -> loc.getComparableAttributes().stream()
@@ -99,7 +99,9 @@ public class DataAcquisitionService {
                 )
                 .map(Coordinate::new)
                 .findAny()
-                .get() // FIXME: what if optional is empty?
+        ).flatMap(
+            optional -> optional.map(Mono::just)
+                .orElseGet(Mono::empty)
         );
 
         return location;
