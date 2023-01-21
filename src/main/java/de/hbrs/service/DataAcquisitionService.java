@@ -1,16 +1,18 @@
 package de.hbrs.service;
 
+
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import de.hbrs.model.Coordinate;
 import de.hbrs.model.Forecast;
 import de.hbrs.model.Location;
 import de.hbrs.model.Temperature;
+import io.netty.resolver.DefaultAddressResolverGroup;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
 
 @Service
 public class DataAcquisitionService {
@@ -23,11 +25,17 @@ public class DataAcquisitionService {
 
     // Endpoint Gates
     // WeatherForecast endpoint gate
-    private Mono<List<Forecast>> queryWeatherEndpoint(double longitude, double latitude) {
+    private Flux<Forecast> queryWeatherEndpoint(double longitude, double latitude) {
 
-        WebClient webClient = WebClient.create();
+        WebClient webClient = WebClient.builder()
+            .clientConnector(
+                new ReactorClientHttpConnector(
+                    HttpClient.create()
+                        .resolver(DefaultAddressResolverGroup.INSTANCE)
+                )
+            ).build();
 
-        Mono<List<Forecast>> forecasts = webClient.get()
+        Flux<Forecast> forecasts = webClient.get()
             .uri(
                 uriBuilder -> uriBuilder
                     .path(DATA_ACQUISITION_API)
@@ -38,17 +46,23 @@ public class DataAcquisitionService {
             )
             .retrieve()
             .bodyToFlux(Forecast.class)
-            .collectList();
+            .log(); // TODO: delete log later
 
         return forecasts;
     }
 
     // Location endpoint gate
-    private Mono<List<Location>> queryLocationEndpoint() {
+    private Flux<Location> queryLocationEndpoint() {
 
-        WebClient webClient = WebClient.create();
+        WebClient webClient = WebClient.builder()
+            .clientConnector(
+                new ReactorClientHttpConnector(
+                    HttpClient.create()
+                        .resolver(DefaultAddressResolverGroup.INSTANCE)
+                )
+            ).build();
 
-        Mono<List<Location>> locations = webClient.get()
+        Flux<Location> locations = webClient.get()
             .uri(
                 uriBuilder -> uriBuilder
                     .path(DATA_ACQUISITION_API)
@@ -57,52 +71,43 @@ public class DataAcquisitionService {
             )
             .retrieve()
             .bodyToFlux(Location.class)
-            .collectList();
+            .log(); // TODO: delete log later
 
         return locations;
     }
 
     // Get unfiltered forecasts by coordinate
-    public Mono<List<Forecast>> getForecasts(Coordinate coordinate) {
+    public Flux<Forecast> getForecasts(Coordinate coordinate) {
         return queryWeatherEndpoint(coordinate.getLongitude(), coordinate.getLatitude());
     }
 
     // Get filtered forecast by coordinate and time
     public Mono<Forecast> getForecast(Coordinate coordinate, int timeOffset) {
-        return this.getForecasts(coordinate).map(list -> list.get(timeOffset));
+        return this.getForecasts(coordinate).elementAt(timeOffset);
     }
 
     // Get unfiltered temperatures by coordinate
-    public Mono<List<Temperature>> getTemperatures(Coordinate coordinate) {
+    public Flux<Temperature> getTemperatures(Coordinate coordinate) {
         return this.getForecasts(coordinate)
-            .map(list -> list.stream()
                 .map(Forecast::getTemperature)
-                .map(Temperature::new)
-                .collect(Collectors.toList())
-            );
+                .map(Temperature::new);
     }
 
     // Get filtered temperature by coordinate and time
     public Mono<Temperature> getTemperature(Coordinate coordinate, int timeOffset) {
-        return this.getTemperatures(coordinate).map(list -> list.get(timeOffset));
+        return this.getTemperatures(coordinate).elementAt(timeOffset);
     }
 
     // Translate a locationCode into a coordinate
     public Mono<Coordinate> translateLocationCodeToCoordinates(String locationCode) {
-        Mono<List<Location>> locations = this.queryLocationEndpoint();
+        Flux<Location> locations = this.queryLocationEndpoint();
 
-        Mono<Coordinate> location = locations.map(
-            list -> list.stream()
-                .filter(
-                    loc -> loc.getComparableAttributes().stream()
-                        .anyMatch(locAtr -> locAtr.contains(locationCode))
-                )
-                .map(Coordinate::new)
-                .findAny()
-        ).flatMap(
-            optional -> optional.map(Mono::just)
-                .orElseGet(Mono::empty)
-        );
+        Mono<Coordinate> location = locations.filter(
+            loc -> loc.getComparableAttributes().stream()
+                .anyMatch(locAtr -> locAtr.contains(locationCode))
+        )
+        .map(loc -> new Coordinate(loc))
+        .next();
 
         return location;
     }

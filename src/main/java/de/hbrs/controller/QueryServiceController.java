@@ -1,18 +1,18 @@
 package de.hbrs.controller;
 
-import de.hbrs.model.*;
-import de.hbrs.service.DataAcquisitionService;
-
 import org.springframework.http.MediaType;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import de.hbrs.model.Coordinate;
+import de.hbrs.model.Forecast;
+import de.hbrs.model.Temperature;
+import de.hbrs.service.DataAcquisitionService;
 
 
 @RestController
@@ -34,7 +34,7 @@ public class QueryServiceController {
         path = "/forecasts-by-coordinate",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<List<Forecast>> forecastsByCoordinate(@RequestParam double longitude, @RequestParam double latitude) {
+    public Flux<Forecast> forecastsByCoordinate(@RequestParam double longitude, @RequestParam double latitude) {
         return dataAcquisitionService.getForecasts(new Coordinate(longitude, latitude));
     }
 
@@ -52,7 +52,7 @@ public class QueryServiceController {
         path = "/temperatures-by-coordinate",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<List<Temperature>> temperaturesByCoordinate(@RequestParam double longitude, @RequestParam double latitude) {
+    public Flux<Temperature> temperaturesByCoordinate(@RequestParam double longitude, @RequestParam double latitude) {
         return dataAcquisitionService.getTemperatures(new Coordinate(longitude, latitude));
     }
 
@@ -71,10 +71,10 @@ public class QueryServiceController {
         path = "/forecasts-by-locationCode",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<List<Forecast>> forecastsByLocationCode(@RequestParam String locationCode) {
+    public Flux<Forecast> forecastsByLocationCode(@RequestParam String locationCode) {
         Mono<Coordinate> coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
 
-        Mono<List<Forecast>> forecasts = coordinate.flatMap(c -> dataAcquisitionService.getForecasts(c));
+        Flux<Forecast> forecasts = coordinate.flatMapMany(dataAcquisitionService::getForecasts);
 
         return forecasts;
     }
@@ -97,10 +97,10 @@ public class QueryServiceController {
             path = "/temperatures-by-locationCode",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<List<Temperature>> temperaturesByLocationCode(@RequestParam String locationCode) {
+    public Flux<Temperature> temperaturesByLocationCode(@RequestParam String locationCode) {
         Mono<Coordinate> coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
 
-        Mono<List<Temperature>> temperatures = coordinate.flatMap(c -> dataAcquisitionService.getTemperatures(c));
+        Flux<Temperature> temperatures = coordinate.flatMapMany(dataAcquisitionService::getTemperatures);
 
         return temperatures;
     }
