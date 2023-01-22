@@ -19,21 +19,27 @@ public class DataAcquisitionService {
 
     // Statics
     // example with ngrok: 'https://fde1-2a02-908-620-85c0-500-89fb-61c3-8e31.eu.ngrok.io' -> http://localhost:8080
-    private static final String DATA_ACQUISITION_API = "http://localhost:5098";
+    private static final String DATA_ACQUISITION_API = "localhost:5098";
     private static final String LOCATION_ENDPOINT    = "Locations";
     private static final String WEATHER_ENDPOINT     = "WeatherForecast";
+
+    private final WebClient webClient;
+
+    public DataAcquisitionService(WebClient.Builder builder) {
+        this.webClient = builder
+        .clientConnector(
+            new ReactorClientHttpConnector(
+                HttpClient.create()
+                    .resolver(DefaultAddressResolverGroup.INSTANCE)
+            )
+        )
+        // .baseUrl(DATA_ACQUISITION_API)
+        .build();
+    }
 
     // Endpoint Gates
     // WeatherForecast endpoint gate
     private Flux<Forecast> queryWeatherEndpoint(double longitude, double latitude) {
-
-        WebClient webClient = WebClient.builder()
-            .clientConnector(
-                new ReactorClientHttpConnector(
-                    HttpClient.create()
-                        .resolver(DefaultAddressResolverGroup.INSTANCE)
-                )
-            ).build();
 
         Flux<Forecast> forecasts = webClient.get()
             .uri(
@@ -45,22 +51,13 @@ public class DataAcquisitionService {
                     .build()
             )
             .retrieve()
-            .bodyToFlux(Forecast.class)
-            .log(); // TODO: delete log later
+            .bodyToFlux(Forecast.class);
 
         return forecasts;
     }
 
     // Location endpoint gate
     private Flux<Location> queryLocationEndpoint() {
-
-        WebClient webClient = WebClient.builder()
-            .clientConnector(
-                new ReactorClientHttpConnector(
-                    HttpClient.create()
-                        .resolver(DefaultAddressResolverGroup.INSTANCE)
-                )
-            ).build();
 
         Flux<Location> locations = webClient.get()
             .uri(
@@ -70,8 +67,7 @@ public class DataAcquisitionService {
                     .build()
             )
             .retrieve()
-            .bodyToFlux(Location.class)
-            .log(); // TODO: delete log later
+            .bodyToFlux(Location.class);
 
         return locations;
     }
