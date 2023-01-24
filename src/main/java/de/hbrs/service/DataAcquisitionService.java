@@ -1,18 +1,15 @@
 package de.hbrs.service;
 
-
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import de.hbrs.model.Coordinate;
 import de.hbrs.model.Forecast;
 import de.hbrs.model.Location;
 import de.hbrs.model.Temperature;
-import io.netty.resolver.DefaultAddressResolverGroup;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClient;
 
 @Service
 public class DataAcquisitionService {
@@ -26,15 +23,7 @@ public class DataAcquisitionService {
     private final WebClient webClient;
 
     public DataAcquisitionService(WebClient.Builder builder) {
-        this.webClient = builder
-        .clientConnector(
-            new ReactorClientHttpConnector(
-                HttpClient.create()
-                    .resolver(DefaultAddressResolverGroup.INSTANCE)
-            )
-        )
-        // .baseUrl(DATA_ACQUISITION_API)
-        .build();
+        this.webClient = builder.build();
     }
 
     // Endpoint Gates
