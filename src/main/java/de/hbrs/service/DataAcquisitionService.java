@@ -63,7 +63,7 @@ public class DataAcquisitionService {
 
     // Get unfiltered forecasts by coordinate
     public Flux<Forecast> getForecasts(Coordinate coordinate) {
-        return queryWeatherEndpoint(coordinate.getLongitude(), coordinate.getLatitude());
+        return queryWeatherEndpoint(coordinate.longitude(), coordinate.latitude());
     }
 
     // Get filtered forecast by coordinate and time
@@ -74,7 +74,7 @@ public class DataAcquisitionService {
     // Get unfiltered temperatures by coordinate
     public Flux<Temperature> getTemperatures(Coordinate coordinate) {
         return this.getForecasts(coordinate)
-                .map(Forecast::getTemperature)
+                .map(Forecast::temperature)
                 .map(Temperature::new);
     }
 

@@ -29,7 +29,7 @@ public class QueryServiceController {
 
     // Methods
     // Coordinate
-    // Get forecasts by stating coordinate
+    // Get forecasts by stating coordinates
     @GetMapping(
         path = "/forecasts-by-coordinate",
         produces = MediaType.APPLICATION_JSON_VALUE
@@ -38,7 +38,7 @@ public class QueryServiceController {
         return dataAcquisitionService.getForecasts(new Coordinate(longitude, latitude));
     }
 
-    // Get forecast by stating coordinate and time offset
+    // Get forecast by stating coordinates and time offset
     @GetMapping(
         path = "/forecast-by-coordinate-and-timeOffset",
         produces = MediaType.APPLICATION_JSON_VALUE
@@ -47,7 +47,7 @@ public class QueryServiceController {
         return dataAcquisitionService.getForecast(new Coordinate(longitude, latitude), timeOffset);
     }
 
-    // Get temperatures by stating coordinate
+    // Get temperatures by stating coordinates
     @GetMapping(
         path = "/temperatures-by-coordinate",
         produces = MediaType.APPLICATION_JSON_VALUE
@@ -56,7 +56,7 @@ public class QueryServiceController {
         return dataAcquisitionService.getTemperatures(new Coordinate(longitude, latitude));
     }
 
-    // Get temperature by coordinate and time offset
+    // Get temperature by coordinates and time offset
     @GetMapping(
         path = "/temperature-by-coordinate-and-timeOffset",
         produces = MediaType.APPLICATION_JSON_VALUE
@@ -81,8 +81,8 @@ public class QueryServiceController {
 
     // Get forecast by locationCode and time offset
     @GetMapping(
-            path = "/forecast-by-locationCode-and-timeOffset",
-            produces = MediaType.APPLICATION_JSON_VALUE
+        path = "/forecast-by-locationCode-and-timeOffset",
+        produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Mono<Forecast> forecastByLocationCodeAndTimeOffset(@RequestParam String locationCode, @RequestParam int timeOffset) {
         Mono<Coordinate> coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
@@ -94,8 +94,8 @@ public class QueryServiceController {
 
     // Get temperature by locationCode
     @GetMapping(
-            path = "/temperatures-by-locationCode",
-            produces = MediaType.APPLICATION_JSON_VALUE
+        path = "/temperatures-by-locationCode",
+        produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Flux<Temperature> temperaturesByLocationCode(@RequestParam String locationCode) {
         Mono<Coordinate> coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
@@ -107,8 +107,8 @@ public class QueryServiceController {
 
     // Get temperature by locationCode and time offset
     @GetMapping(
-            path = "/temperature-by-locationCode-and-timeOffset",
-            produces = MediaType.APPLICATION_JSON_VALUE
+        path = "/temperature-by-locationCode-and-timeOffset",
+        produces = MediaType.APPLICATION_JSON_VALUE
     )
     public Mono<Temperature> temperatureByLocationCodeAndTimeOffset(@RequestParam String locationCode, @RequestParam int timeOffset) {
         Mono<Coordinate> coordinate = dataAcquisitionService.translateLocationCodeToCoordinates(locationCode);
